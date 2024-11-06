@@ -27,3 +27,14 @@
 ## 原理
 
 HTTP 规范里，携带 `Upgrade` 头的请求可以将 HTTP 协议的链接转换为其他协议的链接，在服务端返回 `101` 状态码之后，链接经过的七层代理服务（例如 `nginx`）将转变为四层代理。`http2tcp` 利用这一点，将 HTTP 链接转换为加密的 TCP 通道。
+
+
+### windows使用
+```shell
+# 本地开启监听15433端口，将 15433 的tcp请求通过 http://127.0.0.1:8080 server端 转发到 127.0.0.1:5433
+ .\http2tcp-windows-amd64.exe client -s http://127.0.0.1:8080 -a longlongauthtoken -t 127.0.0.1:5433 -l 127.0.0.1:15433 -m tcp
+
+ .\http2tcp-windows-amd64.exe client -s 127.0.0.1:8080 -a longlongauthtoken -t 127.0.0.1:3306 -l 127.0.0.1:13306 -m tcp
+
+ .\http2tcp-windows-amd64.exe server -l :8080 -a longlongauthtoken
+```
