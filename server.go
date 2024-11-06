@@ -31,7 +31,7 @@ func server(listen string, token string) {
 		}
 
 		mode := r.Header.Get("mode")
-		fmt.Println("mode:" + mode)
+		//fmt.Println("mode:" + mode)
 
 		if len(mode) == 0 {
 			log.Println(r.RemoteAddr, `mode failed`)
@@ -46,7 +46,7 @@ func server(listen string, token string) {
 		}
 
 		if strings.EqualFold("udp", mode) {
-			handleUdp(target, w, r)
+			handleUdp(target, mode, w, r)
 			return
 		}
 
@@ -69,8 +69,8 @@ func server(listen string, token string) {
 		localCloser := &OnceCloser{Closer: local}
 		defer localCloser.Close()
 
-		log.Println(r.RemoteAddr, `->`, target, `connected`)
-		defer log.Println(r.RemoteAddr, `->`, target, `closed`)
+		log.Println(r.RemoteAddr, `->`, target, `connected`, `mode`, mode)
+		defer log.Println(r.RemoteAddr, `->`, target, `closed`, `mode`, mode)
 
 		if err := bio.Writer.Flush(); err != nil {
 			return
@@ -81,7 +81,7 @@ func server(listen string, token string) {
 	http.ListenAndServe(listen, nil)
 }
 
-func handleUdp(target string, w http.ResponseWriter, r *http.Request) {
+func handleUdp(target string, mode string, w http.ResponseWriter, r *http.Request) {
 	fmt.Println("handleUdp")
 	if r.Body == nil {
 		fmt.Println(" request body is null")
@@ -108,6 +108,10 @@ func handleUdp(target string, w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer socket.Close()
+
+	log.Println(r.RemoteAddr, `->`, target, `connected`, `mode`, mode)
+	defer log.Println(r.RemoteAddr, `->`, target, `closed`, `mode`, mode)
+
 	_, err = socket.Write(data)
 	if err != nil {
 		w.WriteHeader(http.StatusBadGateway)

@@ -113,7 +113,7 @@ func CreateProxyConnection(server string, auth string, key []byte, target string
 	req.Header.Add(`Upgrade`, httpHeaderUpgrade)
 	req.Header.Add(authHeader, auth)
 	req.Header.Add(`User-Agent`, `http2tcp`)
-	req.Header.Add(`mode`, `mode`)
+	req.Header.Add(`mode`, mode)
 
 	if err := req.Write(remote); err != nil {
 		return nil, nil, err
