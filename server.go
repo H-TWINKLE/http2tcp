@@ -89,7 +89,8 @@ func handleUdp(target string, mode string, w http.ResponseWriter, r *http.Reques
 	}
 
 	data, err := io.ReadAll(r.Body)
-	fmt.Println("read udp mode request body is ", data)
+	fmt.Println("read udp mode request body is ", string(data))
+
 	if err != nil {
 		fmt.Println("read request body is error")
 		w.WriteHeader(http.StatusBadRequest)

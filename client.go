@@ -44,7 +44,7 @@ func client(listen string, server string, token string, to string, mode string) 
 			fmt.Printf("Received data from %s:%d: %s\n", remoteAddr.IP, remoteAddr.Port, string(data[:n]))
 			_, _, err = CreateProxyConnection(server, auth, key, to, mode, bytes.NewBuffer(data))
 			if err != nil {
-				return
+				fmt.Println("create proxy error:", err)
 			}
 		}
 	} else {
