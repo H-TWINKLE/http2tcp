@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func client(listen string, server string, token string, to string) {
+func client(listen string, server string, token string, to string, mode string) {
 	auth := token[:3]
 	key := GenerateKey(token)
 
@@ -21,7 +21,7 @@ func client(listen string, server string, token string, to string) {
 		localCloser := &OnceCloser{Closer: local}
 		defer localCloser.Close()
 
-		remote, bodyReader, err := CreateProxyConnection(server, auth, key, to)
+		remote, bodyReader, err := CreateProxyConnection(server, auth, key, to, mode)
 		if err != nil {
 			log.Println(err.Error())
 			return
@@ -48,7 +48,7 @@ func client(listen string, server string, token string, to string) {
 				localCloser := &OnceCloser{Closer: local}
 				defer localCloser.Close()
 
-				remote, bodyReader, err := CreateProxyConnection(server, auth, key, to)
+				remote, bodyReader, err := CreateProxyConnection(server, auth, key, to, mode)
 				if err != nil {
 					log.Println(err.Error())
 					return
@@ -62,7 +62,7 @@ func client(listen string, server string, token string, to string) {
 	}
 }
 
-func CreateProxyConnection(server string, auth string, key []byte, target string) (net.Conn, *bufio.Reader, error) {
+func CreateProxyConnection(server string, auth string, key []byte, target string, mode string) (net.Conn, *bufio.Reader, error) {
 	u, err := url.Parse(server)
 	if err != nil {
 		return nil, nil, err
@@ -113,6 +113,7 @@ func CreateProxyConnection(server string, auth string, key []byte, target string
 	req.Header.Add(`Upgrade`, httpHeaderUpgrade)
 	req.Header.Add(authHeader, auth)
 	req.Header.Add(`User-Agent`, `http2tcp`)
+	req.Header.Add(`mode`, `mode`)
 
 	if err := req.Write(remote); err != nil {
 		return nil, nil, err

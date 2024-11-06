@@ -34,6 +34,7 @@ func main() {
 
 	var serverUrl string
 	var target string
+	var mode string
 
 	var clientCmd = &cobra.Command{
 		Use:   "client",
@@ -47,7 +48,7 @@ func main() {
 			if listen != `-` {
 				log.Println(fmt.Sprintf("http2tcp client listen on %s, target %s", listen, target))
 			}
-			client(listen, serverUrl, token, strings.TrimPrefix(target, "http://"))
+			client(listen, serverUrl, token, strings.TrimPrefix(target, "http://"), mode)
 		},
 	}
 
@@ -59,6 +60,8 @@ func main() {
 	clientCmd.MarkFlagRequired("server")
 	clientCmd.Flags().StringVarP(&target, "target", "t", "", "target address")
 	clientCmd.MarkFlagRequired("target")
+	clientCmd.Flags().StringVarP(&mode, "mode", "m", "", "mode of tcp or udp")
+	clientCmd.MarkFlagRequired("mode")
 
 	var rootCmd = &cobra.Command{
 		Use: "http2tcp",
