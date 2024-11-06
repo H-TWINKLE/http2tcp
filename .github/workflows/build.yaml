@@ -25,6 +25,13 @@ jobs:
               CGO_ENABLED=0 GOOS=$os GOARCH=$arch go build -o .build/http2tcp-$os-$arch
             done
           done
+      - name: mv and tar build file
+        run: |
+          mv .build/http2tcp-windows-amd64 .build/http2tcp-windows-amd64.exe
+          mv .build/http2tcp-windows-arm64 .build/http2tcp-windows-arm64.exe
+          tar -czvf build-all.tar.gz .build/*
+          mv build-all.tar.gz .build/
+
       - name: Generate body
         run: |
           echo '**Build At**:
