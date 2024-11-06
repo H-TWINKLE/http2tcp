@@ -60,7 +60,7 @@ func main() {
 	clientCmd.MarkFlagRequired("server")
 	clientCmd.Flags().StringVarP(&target, "target", "t", "", "target address")
 	clientCmd.MarkFlagRequired("target")
-	clientCmd.Flags().StringVarP(&mode, "mode", "m", "", "mode of tcp or udp")
+	clientCmd.Flags().StringVarP(&mode, "mode", "m", "tcp", "mode of tcp or udp, default is tcp")
 	clientCmd.MarkFlagRequired("mode")
 
 	var rootCmd = &cobra.Command{
