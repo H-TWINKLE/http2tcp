@@ -31,7 +31,7 @@ func server(listen string, token string) {
 		}
 
 		mode := r.Header.Get("mode")
-		//fmt.Println("mode:" + mode)
+		fmt.Println("mode:" + mode)
 
 		if len(mode) == 0 {
 			log.Println(r.RemoteAddr, `mode failed`)

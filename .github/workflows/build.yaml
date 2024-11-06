@@ -38,8 +38,8 @@ jobs:
         run: |
           mv .build/http2tcp-windows-amd64 .build/http2tcp-windows-amd64.exe
           mv .build/http2tcp-windows-arm64 .build/http2tcp-windows-arm64.exe
-          tar -czvf build-all.tar.gz .build/*
-          mv build-all.tar.gz .build/
+          tar -czvf http2tcp-build-all.tar.gz .build/*
+          mv http2tcp-build-all.tar.gz .build/
 
       - name: Generate body
         run: |
