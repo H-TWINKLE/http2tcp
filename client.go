@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -41,61 +42,60 @@ func client(listen string, server string, token string, to string, mode string) 
 				continue
 			}
 			fmt.Printf("Received data from %s:%d: %s\n", remoteAddr.IP, remoteAddr.Port, string(data[:n]))
-			_, _, err = CreateProxyConnection(server, auth, key, to, mode)
+			_, _, err = CreateProxyConnection(server, auth, key, to, mode, bytes.NewBuffer(data))
 			if err != nil {
 				return
 			}
 		}
-		return
-	}
-
-	if listen == `-` {
-		local := NewStdReadWriteCloser()
-		localCloser := &OnceCloser{Closer: local}
-		defer localCloser.Close()
-
-		remote, bodyReader, err := CreateProxyConnection(server, auth, key, to, mode)
-		if err != nil {
-			log.Println(err.Error())
-			return
-		}
-		remoteCloser := &OnceCloser{Closer: remote}
-		defer remoteCloser.Close()
-
-		bridge(local, localCloser, remote, bodyReader, remoteCloser)
 	} else {
-		lis, err := net.Listen("tcp", listen)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		defer lis.Close()
+		if listen == `-` {
+			local := NewStdReadWriteCloser()
+			localCloser := &OnceCloser{Closer: local}
+			defer localCloser.Close()
 
-		for {
-			conn, err := lis.Accept()
+			remote, bodyReader, err := CreateProxyConnection(server, auth, key, to, mode, nil)
 			if err != nil {
-				time.Sleep(time.Second * 5)
-				continue
+				log.Println(err.Error())
+				return
 			}
+			remoteCloser := &OnceCloser{Closer: remote}
+			defer remoteCloser.Close()
 
-			go func(local net.Conn) {
-				localCloser := &OnceCloser{Closer: local}
-				defer localCloser.Close()
+			bridge(local, localCloser, remote, bodyReader, remoteCloser)
+		} else {
+			lis, err := net.Listen("tcp", listen)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			defer lis.Close()
 
-				remote, bodyReader, err := CreateProxyConnection(server, auth, key, to, mode)
+			for {
+				conn, err := lis.Accept()
 				if err != nil {
-					log.Println(err.Error())
-					return
+					time.Sleep(time.Second * 5)
+					continue
 				}
-				remoteCloser := &OnceCloser{Closer: remote}
-				defer remoteCloser.Close()
 
-				bridge(local, localCloser, remote, bodyReader, remoteCloser)
-			}(conn)
+				go func(local net.Conn) {
+					localCloser := &OnceCloser{Closer: local}
+					defer localCloser.Close()
+
+					remote, bodyReader, err := CreateProxyConnection(server, auth, key, to, mode, nil)
+					if err != nil {
+						log.Println(err.Error())
+						return
+					}
+					remoteCloser := &OnceCloser{Closer: remote}
+					defer remoteCloser.Close()
+
+					bridge(local, localCloser, remote, bodyReader, remoteCloser)
+				}(conn)
+			}
 		}
 	}
 }
 
-func CreateProxyConnection(server string, auth string, key []byte, target string, mode string) (net.Conn, *bufio.Reader, error) {
+func CreateProxyConnection(server string, auth string, key []byte, target string, mode string, body io.Reader) (net.Conn, *bufio.Reader, error) {
 	u, err := url.Parse(server)
 	if err != nil {
 		return nil, nil, err
@@ -138,7 +138,7 @@ func CreateProxyConnection(server string, auth string, key []byte, target string
 	v.Set(`target`, to)
 	u.RawQuery = v.Encode()
 
-	req, err := http.NewRequest(http.MethodPost, u.String(), nil)
+	req, err := http.NewRequest(http.MethodPost, u.String(), body)
 	if err != nil {
 		return nil, nil, err
 	}

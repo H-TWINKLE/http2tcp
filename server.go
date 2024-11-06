@@ -31,7 +31,7 @@ func server(listen string, token string) {
 		}
 
 		mode := r.Header.Get("mode")
-		fmt.Println("mode:" + mode)
+		// fmt.Println("mode:" + mode)
 
 		if len(mode) == 0 {
 			log.Println(r.RemoteAddr, `mode failed`)
@@ -82,7 +82,6 @@ func server(listen string, token string) {
 }
 
 func handleUdp(target string, mode string, w http.ResponseWriter, r *http.Request) {
-	fmt.Println("handleUdp")
 	if r.Body == nil {
 		fmt.Println(" request body is null")
 		w.WriteHeader(http.StatusBadRequest)
@@ -90,7 +89,7 @@ func handleUdp(target string, mode string, w http.ResponseWriter, r *http.Reques
 	}
 
 	data, err := io.ReadAll(r.Body)
-	fmt.Println(data)
+	fmt.Println("read udp mode request body is ", data)
 	if err != nil {
 		fmt.Println("read request body is error")
 		w.WriteHeader(http.StatusBadRequest)
