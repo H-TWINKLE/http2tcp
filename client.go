@@ -9,12 +9,45 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
 func client(listen string, server string, token string, to string, mode string) {
 	auth := token[:3]
 	key := GenerateKey(token)
+
+	if strings.EqualFold(mode, "udp") {
+		udpAddr, err := net.ResolveUDPAddr("udp", listen)
+		if err != nil {
+			fmt.Println("Error listening:", err)
+			return
+		}
+		lis, err := net.ListenUDP("udp", udpAddr)
+		if err != nil {
+			if strings.Contains(err.Error(), "address already in use") {
+				return
+			} else {
+				fmt.Println(err.Error())
+				return
+			}
+		}
+		defer lis.Close()
+		for {
+			data := make([]byte, 1024)
+			n, remoteAddr, err := lis.ReadFromUDP(data)
+			if err != nil {
+				fmt.Println("ReadFromUDP error:", err)
+				continue
+			}
+			fmt.Printf("Received data from %s:%d: %s\n", remoteAddr.IP, remoteAddr.Port, string(data[:n]))
+			_, _, err = CreateProxyConnection(server, auth, key, to, mode)
+			if err != nil {
+				return
+			}
+		}
+		return
+	}
 
 	if listen == `-` {
 		local := NewStdReadWriteCloser()
