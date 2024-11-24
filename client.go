@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -21,7 +22,7 @@ func client(listen string, server string, token string, to string, mode string) 
 	if strings.EqualFold(mode, "udp") {
 		udpAddr, err := net.ResolveUDPAddr("udp", listen)
 		if err != nil {
-			fmt.Println("Error listening:", err)
+			log.Println("Error listening:", err)
 			return
 		}
 		lis, err := net.ListenUDP("udp", udpAddr)
@@ -29,22 +30,28 @@ func client(listen string, server string, token string, to string, mode string) 
 			if strings.Contains(err.Error(), "address already in use") {
 				return
 			} else {
-				fmt.Println(err.Error())
+				log.Println(err.Error())
 				return
 			}
 		}
 		defer lis.Close()
+
 		for {
-			data := make([]byte, 1024)
-			n, remoteAddr, err := lis.ReadFromUDP(data)
+			buffer := make([]byte, 1024)
+
+			// 同步的
+			n, remoteAddr, err := lis.ReadFromUDP(buffer)
 			if err != nil {
-				fmt.Println("ReadFromUDP error:", err)
+				log.Println("read from UDP error:", err)
+				if errors.Is(err, net.ErrClosed) {
+					break
+				}
 				continue
 			}
-			fmt.Printf("Received data from %s:%d: %s\n", remoteAddr.IP, remoteAddr.Port, string(data[:n]))
-			_, _, err = CreateProxyConnection(server, auth, key, to, mode, bytes.NewBuffer(data))
+			log.Printf("received data from %s:%d, data : %s", remoteAddr.IP, remoteAddr.Port, string(buffer[:n]))
+			_, _, err = CreateProxyConnection(server, auth, key, to, mode, bytes.NewBuffer(buffer))
 			if err != nil {
-				fmt.Println("create proxy error:", err)
+				log.Println("create proxy error:", err)
 			}
 		}
 	} else {
@@ -76,6 +83,7 @@ func client(listen string, server string, token string, to string, mode string) 
 					continue
 				}
 
+				// 异步
 				go func(local net.Conn) {
 					localCloser := &OnceCloser{Closer: local}
 					defer localCloser.Close()
@@ -95,7 +103,12 @@ func client(listen string, server string, token string, to string, mode string) 
 	}
 }
 
-func CreateProxyConnection(server string, auth string, key []byte, target string, mode string, body io.Reader) (net.Conn, *bufio.Reader, error) {
+func CreateProxyConnection(server string,
+	auth string,
+	key []byte,
+	target string,
+	mode string,
+	body io.Reader) (net.Conn, *bufio.Reader, error) {
 	u, err := url.Parse(server)
 	if err != nil {
 		return nil, nil, err
