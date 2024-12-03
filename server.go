@@ -16,6 +16,9 @@ const (
 func server(listen string, token string) {
 	auth := token[:3]
 	key := GenerateKey(token)
+	http.HandleFunc("/info", func(w http.ResponseWriter, r *http.Request) {
+
+	})
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// 远程ip地址
 		remoteAddr := r.Header.Get("RemoteAddr")
@@ -56,7 +59,8 @@ func server(listen string, token string) {
 		//tcp
 		handleTcp(w, r, err, target, mode, remoteAddr)
 	})
-	http.ListenAndServe(listen, nil)
+
+	log.Fatal(http.ListenAndServe(listen, nil))
 }
 
 func handleTcp(w http.ResponseWriter, r *http.Request, err error, target string, mode string, remoteAddr string) {

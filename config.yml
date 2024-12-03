@@ -1,0 +1,9 @@
+appname: http2tcp
+isInit: true
+# 集群名称
+groupAddr: ""
+# 定时上报自身服务端和代理客户端地址的定时任务配置
+cron: "*/5 * * * * *"
+notice:
+  server:
+    - http:// 127.0.0.1:8080
